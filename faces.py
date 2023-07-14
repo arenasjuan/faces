@@ -446,28 +446,6 @@ def main():
                 running = False
 
     showing_average = True
-    while showing_average:
-        screen.fill((0, 0, 0))
-        avg_image = pygame.image.load("AvgAttraction.png").convert_alpha()
-        screen.blit(avg_image, ((screen.get_width() - avg_image.get_width()) / 2, (screen.get_height() - avg_image.get_height()) / 2))
-        draw_centered_text(screen, "Here is the average apple of your eye\n\nPress 'Q' again to quit Faces, or 'C' to continue Faces", 10)
-        pygame.display.flip()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
-                    pygame.quit()
-                    return
-                elif event.key == pygame.K_c:
-                    images = previous_images
-                    last_selected_img_path = last_selected
-                    showing_average = False
-                    just_returned = True
-                    break
-
 
 if __name__ == "__main__":
     main()
