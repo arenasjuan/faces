@@ -268,7 +268,7 @@ def compile_file_names(directory_path):
 
 def main():
     pygame.init()
-    pygame.display.set_caption('Facial Averaging')
+    pygame.display.set_caption('Faces')
     screen = pygame.display.set_mode((1200, 600), pygame.RESIZABLE)
     running = True
 
@@ -286,34 +286,45 @@ def main():
     screen.fill((0, 0, 0))
 
     chosen_gender = choose_gender(screen)
-    male_faces_path = config.male
-    female_faces_path = config.female
     avg_image_name = "AvgAttraction.png"
     if os.path.exists(avg_image_name):
         os.remove(avg_image_name)
     fullscreen = False
 
-    male_faces = compile_file_names(male_faces_path)
-    female_faces = compile_file_names(female_faces_path)
+    male_faces = compile_file_names(config.male)
+    female_faces = compile_file_names(config.female)
     all_faces = male_faces + female_faces
+    chosen_images = set()
 
+    images = None
+    last_selected_img_path = None
+    just_returned = False
     while running:
+        just_returned = False
+        selected_img_path = None
+
         if chosen_gender == "Both":
-            images = random.sample(all_faces, 2) if len(all_faces) >= 2 else all_faces
-        else:
-            if chosen_gender == "Male":
-                images = random.sample(male_faces, 2)
-            elif chosen_gender == "Female":
+            if images is None or len(chosen_images) == len(all_faces):
+                images = random.sample(all_faces, 2) if len(all_faces) >= 2 else all_faces
+        elif chosen_gender == "Female":
+            if images is None or len(chosen_images) == len(female_faces):
                 images = random.sample(female_faces, 2)
+        else:
+            if images is None or len(chosen_images) == len(male_faces):
+                images = random.sample(male_faces, 2)
 
         img_objs = load_images(screen, images)
         screen.fill((0, 0, 0))
         draw_images(screen, img_objs)
         draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose", 10)
         pygame.display.flip()
-        selected_img_path = None
 
-        while selected_img_path is None and running:
+        running_selection = True
+        while running_selection and running:
+            if just_returned:
+                just_returned = False
+                running_selection = False
+                break
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -336,15 +347,17 @@ def main():
                         draw_images(screen, img_objs)  # Redraw images after resizing
                         draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose", 10)
                         pygame.display.flip()
-                    elif event.key == pygame.K_q:  # Quit and show the average face
-                        running = False
-                        screen.fill((0, 0, 0))
-                        avg_image = pygame.image.load("AvgAttraction.png").convert_alpha()
-                        screen.blit(avg_image, ((screen.get_width() - avg_image.get_width()) / 2, (screen.get_height() - avg_image.get_height()) / 2))
-                        draw_centered_text(screen, "Here is the average apple of your eye\n\nPress 'Q' again to quit Faces, or 'C' to continue Faces", 10)
-                        pygame.display.flip()
+                    elif event.key == pygame.K_q:
+                        previous_images = images.copy()
+                        last_selected = last_selected_img_path 
+                        showing_average = True
+                        while showing_average:
+                            screen.fill((0, 0, 0))
+                            avg_image = pygame.image.load("AvgAttraction.png").convert_alpha()
+                            screen.blit(avg_image, ((screen.get_width() - avg_image.get_width()) / 2, (screen.get_height() - avg_image.get_height()) / 2))
+                            draw_centered_text(screen, "Here is the average apple of your eye\n\nPress 'Q' again to quit Faces, or 'C' to continue Faces", 10)
+                            pygame.display.flip()
 
-                        while True:
                             for event in pygame.event.get():
                                 if event.type == pygame.QUIT:
                                     pygame.quit()
@@ -354,29 +367,107 @@ def main():
                                         pygame.quit()
                                         return
                                     elif event.key == pygame.K_c:
-                                        running = True
+                                        images = previous_images
+                                        showing_average = False
+                                        selected_img_path = last_selected_img_path
+                                        running_selection = False
+                                        just_returned = True
                                         break
-                            if running:
-                                break
+                    elif event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
+                        selected_img_index = 0 if event.key == pygame.K_LEFT else 1
+                        selected_img_path = images[selected_img_index]
+                        last_selected_img_path = selected_img_path
+                        running_selection = False  # Exit the selection loop
+
+        # After the selection loop, replace the unselected image with a new one
+        if selected_img_path is not None and running and not just_returned:
+            unselected_img_index = 1 if selected_img_index == 0 else 0
+            images.pop(unselected_img_index)  # Remove unselected image from the list
+            
+            if chosen_gender == "Male":
+                new_image = random.choice(male_faces)
+            elif chosen_gender == "Female":
+                new_image = random.choice(female_faces)
+            else:  # chosen_gender == "Both"
+                new_image = random.choice(all_faces)
+
+            images.insert(unselected_img_index, new_image)  # Insert new image into the list
+
+        if just_returned:
+            just_returned = False
+
+        while selected_img_path is None and running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.VIDEORESIZE:
+                    screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                    img_objs = load_images(screen, images)  
+                    screen.fill((0, 0, 0))
+                    draw_images(screen, img_objs)
+                    draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose", 10)
+                    pygame.display.flip()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_F11:  
+                        fullscreen = not fullscreen
+                        if fullscreen:
+                            screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                        else:
+                            screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                        img_objs = load_images(screen, images)
+                        screen.fill((0, 0, 0))
+                        draw_images(screen, img_objs)
+                        draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose", 10)
+                        pygame.display.flip()
+                    
                     elif event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
                         selected_img_path = images[0 if event.key == pygame.K_LEFT else 1]
 
         if selected_img_path is not None and running:
-            if os.path.exists(avg_image_name):
-                imgMorph = morph_faces(avg_image_name, selected_img_path, 0.5)
-                cv2.imwrite(avg_image_name, imgMorph)
-            else:
-                shutil.copy2(selected_img_path, avg_image_name)
+            if selected_img_path not in chosen_images:
+                chosen_images.add(selected_img_path)
+                if os.path.exists(avg_image_name):
+                    imgMorph = morph_faces(avg_image_name, selected_img_path, 0.5)
+                    cv2.imwrite(avg_image_name, imgMorph)
+                else:
+                    shutil.copy2(selected_img_path, avg_image_name)
 
-        # Remove used file names from the respective lists
-        if selected_img_path in male_faces:
-            male_faces.remove(selected_img_path)
-        if selected_img_path in female_faces:
-            female_faces.remove(selected_img_path)
+            # Remove used file names from the respective lists
+            if selected_img_path in male_faces:
+                male_faces.remove(selected_img_path)
+            elif selected_img_path in female_faces:
+                female_faces.remove(selected_img_path)
+            if chosen_gender == "Both":
+                if selected_img_path in all_faces:
+                    all_faces.remove(selected_img_path)
 
-    pygame.quit()
+            # Terminate the loop if all faces of chosen gender have been shown
+            if (chosen_gender == "Male" and not male_faces) or (chosen_gender == "Female" and not female_faces) or (chosen_gender == "Both" and not all_faces):
+                running = False
+
+    showing_average = True
+    while showing_average:
+        screen.fill((0, 0, 0))
+        avg_image = pygame.image.load("AvgAttraction.png").convert_alpha()
+        screen.blit(avg_image, ((screen.get_width() - avg_image.get_width()) / 2, (screen.get_height() - avg_image.get_height()) / 2))
+        draw_centered_text(screen, "Here is the average apple of your eye\n\nPress 'Q' again to quit Faces, or 'C' to continue Faces", 10)
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    pygame.quit()
+                    return
+                elif event.key == pygame.K_c:
+                    images = previous_images
+                    last_selected_img_path = last_selected
+                    showing_average = False
+                    just_returned = True
+                    break
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
