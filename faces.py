@@ -316,7 +316,7 @@ def main():
         img_objs = load_images(screen, images)
         screen.fill((0, 0, 0))
         draw_images(screen, img_objs)
-        draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose", 10)
+        draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose; press 'Q' at any time to view your average lover", 10)
         pygame.display.flip()
 
         running_selection = True
@@ -333,7 +333,7 @@ def main():
                     img_objs = load_images(screen, images)  # Reload images after resizing
                     screen.fill((0, 0, 0))
                     draw_images(screen, img_objs)  # Redraw images after resizing
-                    draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose", 10)
+                    draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose; press 'Q' at any time to view your average lover", 10)
                     pygame.display.flip()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_F11:  # F11 key to toggle fullscreen
@@ -345,7 +345,7 @@ def main():
                         img_objs = load_images(screen, images)  # Reload images after resizing
                         screen.fill((0, 0, 0))
                         draw_images(screen, img_objs)  # Redraw images after resizing
-                        draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose", 10)
+                        draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose; press 'Q' at any time to view your average lover", 10)
                         pygame.display.flip()
                     elif event.key == pygame.K_q:
                         previous_images = images.copy()
