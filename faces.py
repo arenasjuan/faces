@@ -405,7 +405,7 @@ def main():
                     img_objs = load_images(screen, images)  
                     screen.fill((0, 0, 0))
                     draw_images(screen, img_objs)
-                    draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose", 10)
+                    draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose; press 'Q' at any time to view your average lover", 10)
                     pygame.display.flip()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_F11:  
@@ -417,7 +417,7 @@ def main():
                         img_objs = load_images(screen, images)
                         screen.fill((0, 0, 0))
                         draw_images(screen, img_objs)
-                        draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose", 10)
+                        draw_centered_text(screen, "Which face are you more attracted to? Use left or right arrow keys to choose; press 'Q' at any time to view your average lover", 10)
                         pygame.display.flip()
                     
                     elif event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
